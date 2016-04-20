@@ -1,0 +1,5 @@
+WorkDir='../html5'
+RemoteBrName='develop'
+StartRev='1'
+RemoteUrl='https://vprad@bitbucket.org/ioscorp/envihtml5.git'
+Username='vprad'

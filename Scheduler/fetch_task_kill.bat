@@ -1,0 +1,1 @@
+schtasks /Delete /TN "git_fetch"
