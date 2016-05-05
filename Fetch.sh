@@ -6,14 +6,14 @@ set -o pipefail
 set -uC
 ( (
 	set -ex
+	date
 	pwd
 	source "${CurrentDir}./zConfig.sh"
 	WorkDir="${CurrentDir}${WorkDir}";
 	cd "${WorkDir}"
-
-	BrName='master'
-	FetchCmd="git fetch . refs/remotes/${RemoteBrName}:refs/heads/${BrName}"
-	${FetchCmd} ||
+	pwd
+	FetchCmd="git fetch --prune --all --verbose"
+	time ${FetchCmd} ||
 	(
 		CurrentPos="$(git rev-parse --abbrev-ref HEAD)"
 		git checkout -q HEAD~0
