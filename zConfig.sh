@@ -1,4 +1,4 @@
-WorkDir='../'
+WorkDir='../main/'
 RemoteBrName=''
 StartRev='1'
 RemoteUrl=''
