@@ -1,0 +1,2 @@
+c:\MultiFetch\DLOS
+https://bitbucket.org/ia-bohdan/dlos.git
