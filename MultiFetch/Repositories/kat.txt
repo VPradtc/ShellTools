@@ -1,0 +1,2 @@
+c:\MultiFetch\KAT
+https://bitbucket.org/ia-bohdan/kat.git

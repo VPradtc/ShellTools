@@ -1,0 +1,2 @@
+c:\MultiFetch\KIC Service
+https://bitbucket.org/ia-bohdan/kicservice.git
