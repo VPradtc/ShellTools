@@ -1,0 +1,54 @@
+===== SQL ======
+mysql cluster
+sharding
+replication
+deadlocks
+cdc
+
+Lock Types:
+	shared
+	exclusive
+	intent
+	record
+	gap
+	next-key
+	insert
+	intent
+
+WITH CONSISTENT SNAPSHOT
+
+isolation levels
+READ UNCOMMITED
+READ COMMITED
+REPEATABLE READ - lock / snapshot
+SERIALIZED
+
+consistent nonlocking read
+
+normalization levels
+denormalization
+
+SOLID
+
+===== JS ======
+
+Prototypes
+Encapsulation/closures
+Variable scope/Hoisting/let
+== vs ===
+null vs undefined vs undeclared
+promises
+reflow
+
+===== HTTP ====
+verbs
+SSL vs TLS
+CORS
+
+===== CSS =====
+position
+box-sizing
+selector priority
+responsive design best practices
+media queries
+size units of measurement (px/em/rem)

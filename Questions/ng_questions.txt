@@ -1,0 +1,17 @@
+Describe angular's application initialization process. From the moment you press F5 to the moment live content appears on the page.
+How does angular's implementation of MVVM differ from its competitors? What are its advantages/drawbacks?
+What are annotations for?
+What values can directive's 'scope' parameter assume?
+What's wrong with two-way binding? Why did angular team decide to abandon this approach?
+Factory vs Service?
+Can you make multiple instances of factory and/or service? If so, how? If not, what's the solution?
+Best practices regarding application structure? Why is ng-controller considered bad practice?
+Why is $rootScope.broadcast considered bad practice?
+What is provider? Whet does its code execute? What problem does it solve?
+Promise vs Deferred ?
+Directives: compile vs link.
+How can you unit test controllers/services ?
+Why is jQuery + angular combo heavily discouraged?
+What is transclusion for? How does it work? What scopes are involved in the process?
+ui-router vs built-in router vs component router?
+How would you implement front-end security restrictions (view scope)?
