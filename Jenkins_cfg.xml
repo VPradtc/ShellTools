@@ -1,0 +1,191 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@3.3.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://avws.visualstudio.com/_git/AccreditedVendors</url>
+        <credentialsId>40883f34-a8b8-426d-85e1-35c2fdc484ff</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/develop</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>echo *************** START REBASE ***************
+
+git config --global user.email &quot;tech01@avws.io&quot;
+git config --global user.name &quot;Jenkins CI&quot;
+
+git branch -f develop origin/develop || git reset --hard origin/develop
+git rebase --abort || true
+git reset --hard develop
+git branch -f ci/develop_config origin/ci/develop_config || git reset --hard origin/ci/develop_config
+git rebase head ci/develop_config
+</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.powershell.PowerShell plugin="powershell@1.3">
+      <command>@&quot;
+*************** START RESTORE PACKAGES ***************
+&quot;@
+
+NuGet.exe update -self
+
+NuGet.exe restore &apos;OnePortal\OnePortal.sln&apos;
+
+@&quot;
+*************** END RESTORE PACKAGES ***************
+
+*************** START Build DBVersionControl.csproj ***************
+&quot;@</command>
+    </hudson.plugins.powershell.PowerShell>
+    <hudson.plugins.msbuild.MsBuildBuilder plugin="msbuild@1.27">
+      <msBuildName>(Default)</msBuildName>
+      <msBuildFile>OnePortal\DBVersionControl\DBVersionControl.csproj</msBuildFile>
+      <cmdLineArgs>/T:Clean;Build /p:Configuration=Debug /p:OutputPath=&quot;obj\Debug&quot; /p:BuildInParallel=&quot;true&quot; /consoleloggerparameters:PerformanceSummary;ErrorsOnly</cmdLineArgs>
+      <buildVariablesAsProperties>false</buildVariablesAsProperties>
+      <continueOnBuildFailure>false</continueOnBuildFailure>
+      <unstableIfWarnings>false</unstableIfWarnings>
+    </hudson.plugins.msbuild.MsBuildBuilder>
+    <hudson.tasks.BatchFile>
+      <command>echo *************** END Build DBVersionControl.csproj ***************&#xd;
+echo *************** START Run DBVersionControl.exe ***************&#xd;
+&#xd;
+cd OnePortal\DBVersionControl\obj\Debug&#xd;
+DBVersionControl.exe -sd&#xd;
+&#xd;
+echo *************** END Run DBVersionControl.exe ***************</command>
+    </hudson.tasks.BatchFile>
+    <hudson.tasks.BatchFile>
+      <command>echo *************** START RUN Bower ***************&#xd;
+&#xd;
+cd OnePortal\OnePortal.Web\wwwroot\oneCatalog&#xd;
+call &quot;C:\Program Files\nodejs\node_modules\.bin\bower&quot; install --force-latest&#xd;
+call &quot;C:\Program Files\nodejs\node_modules\.bin\bower&quot; update&#xd;
+&#xd;
+echo *************** END RUN Bower ***************</command>
+    </hudson.tasks.BatchFile>
+    <hudson.tasks.BatchFile>
+      <command>echo *************** START RUN Bower ***************&#xd;
+&#xd;
+cd OnePortal\OnePortal.Web\wwwroot\onePortal&#xd;
+call &quot;C:\Program Files\nodejs\node_modules\.bin\bower&quot; install --force-latest&#xd;
+call &quot;C:\Program Files\nodejs\node_modules\.bin\bower&quot; update&#xd;
+&#xd;
+echo *************** END RUN Bower ***************</command>
+    </hudson.tasks.BatchFile>
+    <hudson.tasks.BatchFile>
+      <command>echo *************** START RUN Bower ***************&#xd;
+&#xd;
+cd OnePortal\OnePortal.Web\wwwroot\accreditedVendors&#xd;
+call &quot;C:\Program Files\nodejs\node_modules\.bin\bower&quot; install --force-latest&#xd;
+call &quot;C:\Program Files\nodejs\node_modules\.bin\bower&quot; update&#xd;
+&#xd;
+echo *************** END RUN Bower ***************</command>
+    </hudson.tasks.BatchFile>
+    <hudson.plugins.powershell.PowerShell plugin="powershell@1.3">
+      <command>@&quot;
+*************** START OnePortal pubxml ***************
+&quot;@
+
+$publishConfig= &apos;OnePortal/OnePortal.Web/Properties/PublishProfiles/OnePortal - Web Deploy.pubxml&apos;
+$docPublish = (Get-Content $publishConfig) -as [Xml]
+
+$node = $docPublish.Project.PropertyGroup.ChildNodes | where {$_.name -like &apos;Password&apos;}
+$node.InnerText = &quot;baN0pwcQrCKdoTNjNG5onouSfjq6uxLDwLNpLuCd9GT54S7AfRua8EdqCHc1&quot;
+
+$docPublish.Save($publishConfig)
+
+@&quot;
+*************** END OnePortal pubxml ***************
+&quot;@</command>
+    </hudson.plugins.powershell.PowerShell>
+    <hudson.plugins.powershell.PowerShell plugin="powershell@1.3">
+      <command>@&quot;
+*************** START OnePortal Azure Jobs ***************
+&quot;@
+
+$jobConfigFiles = @(
+     &apos;OnePortal/OnePortal.Web/Properties/webjobs.props&apos;
+    ,&apos;OnePortal/OnePortal.Jobs.ApproveExpireNotification/Properties/webjobs.props&apos;
+    ,&apos;OnePortal/ExternalServices/OnePortal.ExternalServices.PaymentNotification/Properties/webjobs.props&apos;
+)
+
+foreach ($jobConfigFile in $jobConfigFiles ) {
+    $jobConfigXml = (Get-Content $jobConfigFile) -as [Xml]
+
+    $jobPropertiesNode = $jobConfigXml.Project.Target.PropertyGroup
+    $jobPropertiesNode.ManagementCertificate = &quot;MIICGTCCAYKgAwIBAgIQAkAAEwAJAAoAFQAFAAQH4TANBgkqhkiG9w0BAQUFADAhMR8wHQYDVQQDExZBVkplbmtpbnMuY2xvdWRhcHAubmV0MB4XDTE3MDQxOTEyMDAwMFoXDTI1MDcwNjEyMDAwMFowITEfMB0GA1UEAxMWQVZKZW5raW5zLmNsb3VkYXBwLm5ldDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA6OGtvLpgkASKfb2jz3JKXO/HwQdsMhCnrgqeCHxPKZ+kBaNPaQxZeamDDv96ZSBtyC18b0fmtlEvA+xrfSbZPhPwIFudQIRxdmInjSyODalDcy/IN69QVh5gwacbJu0IpMR+YqQMyYhs/kVtX4X5EoD5h/Hwk+sjM/89jaf3TeECAwEAAaNSMFAwHQYDVR0OBBYEFFApbnrygPOtY36ajKSNKQP+3yb8MAsGA1UdDwQEAwIBtjATBgNVHSUEDDAKBggrBgEFBQcDATANBgNVHQoEBjAEAwIHgDANBgkqhkiG9w0BAQUFAAOBgQBiMjkPBE7cqvAtAY0irqb35BMxjxpXYYfdPyw10Ygd+/zVRt9uRIA/eqPcVvlmelWKqmA/3ljnXbXZn/Q9RGn0GA+SO4YTI3SlECeGq6VTBEsFy206GiHm2e3dinuXlha2ujN24SehF2xlYr0P8POx/26URYZElHgcOQZH7dZ44Q==&quot;
+
+    $jobPropertiesNode.SubscriptionId = &quot;744943fd-d90b-4135-b82b-1673804e1b9d&quot;
+
+    $jobConfigXml.Save($jobConfigFile)
+}
+
+
+@&quot;
+*************** END OnePortal Azure Jobs ***************
+&quot;@</command>
+    </hudson.plugins.powershell.PowerShell>
+    <hudson.plugins.msbuild.MsBuildBuilder plugin="msbuild@1.27">
+      <msBuildName>(Default)</msBuildName>
+      <msBuildFile>OnePortal\OnePortal.Web\OnePortal.Web.csproj</msBuildFile>
+      <cmdLineArgs>/T:Clean;Build;Package  /p:Configuration=Debug;DeployOnBuild=True;PublishProfile=&quot;OnePortal - Web Deploy.pubxml&quot; /consoleloggerparameters:PerformanceSummary;ErrorsOnly  /p:_DestinationType=AzureWebSite</cmdLineArgs>
+      <buildVariablesAsProperties>false</buildVariablesAsProperties>
+      <continueOnBuildFailure>false</continueOnBuildFailure>
+      <unstableIfWarnings>false</unstableIfWarnings>
+    </hudson.plugins.msbuild.MsBuildBuilder>
+    <hudson.plugins.powershell.PowerShell plugin="powershell@1.3">
+      <command>@&quot;
+*************** START OneCatalog - External API pubxml ***************
+&quot;@
+
+$publishConfig= &apos;OnePortal/OneCatalog.ExternalAPI/Properties/PublishProfiles/onecatalog-api-dev - Web Deploy.pubxml&apos;
+$docPublish = (Get-Content $publishConfig) -as [Xml]
+
+$node = $docPublish.Project.PropertyGroup.ChildNodes | where {$_.name -like &apos;Password&apos;}
+$node.InnerText = &quot;Fgpe8ybgYvhaXCliLcZ0YALey2QAEghYpwnm9iHeCW51zqcsqXZFxSsXtjjx&quot;
+
+$docPublish.Save($publishConfig)
+
+@&quot;
+*************** END OneCatalog - External API pubxml ***************
+&quot;@</command>
+    </hudson.plugins.powershell.PowerShell>
+    <hudson.plugins.msbuild.MsBuildBuilder plugin="msbuild@1.27">
+      <msBuildName>(Default)</msBuildName>
+      <msBuildFile>OnePortal\OneCatalog.ExternalAPI\OneCatalog.ExternalAPI.csproj</msBuildFile>
+      <cmdLineArgs>/T:Clean;Build;Package  /p:Configuration=Debug;DeployOnBuild=True;PublishProfile=&quot;onecatalog-api-dev - Web Deploy.pubxml&quot; /consoleloggerparameters:PerformanceSummary;ErrorsOnly</cmdLineArgs>
+      <buildVariablesAsProperties>false</buildVariablesAsProperties>
+      <continueOnBuildFailure>false</continueOnBuildFailure>
+      <unstableIfWarnings>false</unstableIfWarnings>
+    </hudson.plugins.msbuild.MsBuildBuilder>
+  </builders>
+  <publishers>
+    <hudson.tasks.Mailer plugin="mailer@1.20">
+      <recipients>bohdan@inoxoft.com viacheslav.pradchuk@inoxoft.com andriy.kibalnikov@inoxoft.com volodymyr.gosovskiy@inoxoft.com oleh.dawydiak@inoxoft.com</recipients>
+      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
+      <sendToIndividuals>true</sendToIndividuals>
+    </hudson.tasks.Mailer>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.8.8"/>
+  </buildWrappers>
+</project>
