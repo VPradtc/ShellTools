@@ -31,3 +31,6 @@ choco install Git-Credential-Manager-for-Windows
 choco install adblockplus-firefox
 choco install doublecmd
 choco install truecrypt
+choco install postman
+choco install poweriso
+
