@@ -1,0 +1,38 @@
+Control flow statements.
+	Use 'if' statements only as part of 'early exit' pattern (e.g. if invalid - return; if null - throw exception; etc.).
+		Any other control flow change must be handled using polymorphic interface.
+	'Switch' and 'else' keywords are banned.
+
+Mutability/Immutability.
+	Modification of input parameters is not allowed. Exceptions:
+		- 'Mapper' classes are allowed to modify destination parameter.
+	[C#] 'ref' and 'out' keywords are banned. Exceptions:
+		- 'TryParse' methods can have an 'out' parameter for parsed value.
+	All models that don't originate from external sources(DbContext, Model Binder, inputs etc.) must be immutable (no setters, no methods that modify fields).
+	Constructors must fully initialize an object. Any subsequently called method must work as intended (no 'if (this.isInitialized)' checks or anything alike).
+	All classes' inner state must be immutable. If you really need a class with mutable inner state - wrap class constructor call using Factory pattern.
+
+Object lifetime.
+	For IoC bindings, use transient lifetime scope. Use other lifetime scopes only if it's mandatory for third-party libraries.
+	Static classes/members are not allowed. Exceptions:
+		- Extension methods
+		- Flyweight pattern implementations (aka Rich Enum)
+
+Code style
+	Install .editorconfig and linter extensions for your IDE. Fix linter warnings as they pop up. Feel free to suggest modifications to linter configuration.
+
+OOD & Polymorphism
+	All classes must comply to Single Responsibility Principle. Keep them short and simple - a class should take less than 1.5 screens (about 100 lines). Go full SOLID if you can, although deviations are acceptable.
+	Downcasting is not allowed. Exceptions:
+		- [TypeScript] If you must use a weakly-typed library, you may downcast the library-returned value back to its original type. Still, look for a strongly-typed alternative.
+	Avoid having specific generic type in non-generic type's dependencies - introduce non-generic interface in its place.
+	Do not reuse code 'as is' if it requires some sort of compensating logic on your end. Refactor the code first to match your needs, then reuse the relevant part.
+
+Common sanity
+	Don't hardcode non-default number and string values. Use enums/constants.
+	Avoid putting a lot of code in IF statement body. Invert IFs to reduce overall nesting level.
+	Do not write nested ifs and loops. If you need more levels of nesting, try inverting IF statements, applying Early Exit pattern and/or extracting methods/dependencies. In worst case scenario - use 2 levels of nesting.
+	Use meaningful names for variables/classes/members. Avoid names like 'data', 'utils', 'callback', 'helper' etc.
+	DRY, unless you need to implement hardcore performance optimizations.
+	[C#] Do not use tuple literals, tuple types and parameter deconstruction - introduce a model instead.
+	Do not nest function calls (e.g UpdateValue(GetCurrentValue())). Introduce a variable to hold intermediate value.
